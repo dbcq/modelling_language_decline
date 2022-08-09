@@ -6,62 +6,11 @@ import os
 from numba import jit
 import sys
 
-class City:
-    def __init__(self, pos, size, mem):
-        self.pos = np.array(pos)  # Should be a numpy array in form [x, y]
-        self.radius = size
-        self.mem = mem  # Frequency of usage of variant A
-
-
-def getPopulationDensity(cities, sizex, sizey, delta_x):
-    x = np.arange(0, sizey, delta_x)
-    y = np.arange(0, sizex, delta_x)
-    X, Y = np.meshgrid(x, y)
-    Z = np.zeros((sizex, sizey))
-
-    for city in cities:
-        coords = city.pos
-        Z += cityFunc(X, Y, *coords, city.radius)
-
-    return Z
-
-
-def cityFunc(x, y, cityx, cityy, R):
-    dist = np.hypot(x - cityx, y - cityy)
-    density = np.exp(-dist**2/R**2)
-    return density
-
 
 def sigmoid(m, alpha = 1., beta = 1.):
     frequency = (m**(alpha*beta))/(m**(alpha*beta) + (1- m**alpha)**beta)
     return frequency
 
-
-
-def localAverage(field):
-    # Input should have a border of zeros around the edge - these are ignored
-    interior = field[1:-1, 1:-1]
-    avgInterior = interior.copy()
-    x, y = interior.shape
-    for i in range(x):
-        for j in range(y):
-            sum = 0.
-            counter = 0
-
-            # Check the 4 nearest neighbours
-            for dx, dy in [(-1, 0), (0, -1), (0, 1), (1, 0)]:
-                if (0 <= i + dx <= x - 1) and (0 <= j + dy <= y - 1):
-                    sum += interior[i + dx][j + dy]
-                    # print(field[i + dx][j + dy])
-                    counter += 1
-                else:
-                    pass
-            # print(sum)
-            avgInterior[i][j] = sum / counter  # Counter makes sure we only divide by no. cells used
-
-    result = np.zeros((x + 2, y + 2))
-    result[1:-1, 1:-1] = avgInterior
-    return result
 
 @jit(nopython=True)
 def localAverageCountry(field):
@@ -112,41 +61,16 @@ def calculate(m):
         #dmdt[includedRegion] = (f[includedRegion] - m[includedRegion]) + (2*sigma[includedRegion]**2) * (avgDensFreq[includedRegion]/avgDensity[includedRegion] - f[includedRegion])
         dmdt[includedRegion] = (f[includedRegion] - m[includedRegion]) + (2*sigma**2) * (avgDensFreq[includedRegion]/avgDensity[includedRegion] - f[includedRegion])
 
-
         m[includedRegion] = m[includedRegion] + dmdt[includedRegion]*delta_t
         f[includedRegion] = sigmoid(m[includedRegion], alpha, beta)
+    
     return m
 
-def initialCondition(memoryField, city):
-    """Implements the initial condition that a particular city uses one variant"""
-    [cityx, cityy] = city.pos
-    r = city.radius
-    x = np.arange(0, mapsizex, delta_x)
-    y = np.arange(0, mapsizey, delta_x)
-    X, Y = np.meshgrid(x, y)
-    # sqdist = (X-cityx)**2 + (Y-cityy)**2
-    # memoryField[:, :, :] = np.exp(-sqdist/(radfactor*(r**2)))
-
-    # Create a solid mask
-    ys, xs = np.ogrid[-cityy:mapsizey-cityy, -cityx:mapsizex-cityx]  # Create an openGrid containing the distances of each point to the city's centre
-    region = xs**2 + ys**2 <= (initialfactor*r)**2
-    memoryField[:, region] = 1.0
-
-    return memoryField
-
-
-args = sys.argv
-country = args[1]
-alpha = float(args[2])
-sigma_smooth = int(args[3])
-#factor = int(args[4])
-#if factor == 1:
-#    factor = np.log(2)/10
-#elif factor == 2:
-#    factor = np.log(100)/10
-
-
-if country == "wales":
+if __name__ == "__main__":
+    args = sys.argv
+    country = args[1]
+    alpha = float(args[2])
+    sigma_smooth = int(args[3])
     
     #includedRegionImg = Image.open("Cornwall_data/cornwall_mask.tif")
     includedRegion = np.load("Wales_data/wales_plus_mask.npy").astype(bool)

@@ -1,3 +1,6 @@
+"""Given a region, a population distribution and an initial condition, simulates
+the decline of the language using the equation described in the article."""
+
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import animation
@@ -6,62 +9,11 @@ import os
 from numba import jit
 import sys
 
-class City:
-    def __init__(self, pos, size, mem):
-        self.pos = np.array(pos)  # Should be a numpy array in form [x, y]
-        self.radius = size
-        self.mem = mem  # Frequency of usage of variant A
-
-
-def getPopulationDensity(cities, sizex, sizey, delta_x):
-    x = np.arange(0, sizey, delta_x)
-    y = np.arange(0, sizex, delta_x)
-    X, Y = np.meshgrid(x, y)
-    Z = np.zeros((sizex, sizey))
-
-    for city in cities:
-        coords = city.pos
-        Z += cityFunc(X, Y, *coords, city.radius)
-
-    return Z
-
-
-def cityFunc(x, y, cityx, cityy, R):
-    dist = np.hypot(x - cityx, y - cityy)
-    density = np.exp(-dist**2/R**2)
-    return density
-
 
 @jit(nopython=True)
 def sigmoid(m, alpha = 1., beta = 1.):
     frequency = (m**(alpha*beta))/(m**(alpha*beta) + (1- m**alpha)**beta)
     return frequency
-
-
-def localAverage(field):
-    # Input should have a border of zeros around the edge - these are ignored
-    interior = field[1:-1, 1:-1]
-    avgInterior = interior.copy()
-    x, y = interior.shape
-    for i in range(x):
-        for j in range(y):
-            sum = 0.
-            counter = 0
-
-            # Check the 4 nearest neighbours
-            for dx, dy in [(-1, 0), (0, -1), (0, 1), (1, 0)]:
-                if (0 <= i + dx <= x - 1) and (0 <= j + dy <= y - 1):
-                    sum += interior[i + dx][j + dy]
-                    # print(field[i + dx][j + dy])
-                    counter += 1
-                else:
-                    pass
-            # print(sum)
-            avgInterior[i][j] = sum / counter  # Counter makes sure we only divide by no. cells used
-
-    result = np.zeros((x + 2, y + 2))
-    result[1:-1, 1:-1] = avgInterior
-    return result
 
 @jit(nopython=True)
 def localAverageCountry(field):
@@ -75,17 +27,14 @@ def localAverageCountry(field):
             counter = 0
 
             if includedRegion[i][j]:
-                # print(i,j)
                 # Check the 4 nearest neighbours
                 for dx, dy in [(-1, 0), (0, -1), (0, 1), (1, 0)]:
                     if includedRegion[i + dx][j + dy]:
                         # if (0 <= i + dx <= x - 1) and (0 <= j + dy <= y - 1):
                         sum += field[i + dx][j + dy]
-                        # print(field[i + dx][j + dy])
                         counter += 1
                     else:
                         pass
-                # print(sum)
 
                 if counter == 0:
                     pass
@@ -96,6 +45,8 @@ def localAverageCountry(field):
 
 
 def calculate(m):
+    """Solve the differential equation"""
+
     avgDensity = localAverageCountry(populationDensity)
 
     for k in range(0, iterations-1, 1):
@@ -113,89 +64,54 @@ def calculate(m):
         f[includedRegion] = sigmoid(m[includedRegion], alpha, beta)
     return m
 
-def initialCondition(memoryField, city):
-    """Implements the initial condition that a particular city uses one variant"""
-    [cityx, cityy] = city.pos
-    r = city.radius
-    x = np.arange(0, mapsizex, delta_x)
-    y = np.arange(0, mapsizey, delta_x)
-    X, Y = np.meshgrid(x, y)
-    # sqdist = (X-cityx)**2 + (Y-cityy)**2
-    # memoryField[:, :, :] = np.exp(-sqdist/(radfactor*(r**2)))
 
-    # Create a solid mask
-    ys, xs = np.ogrid[-cityy:mapsizey-cityy, -cityx:mapsizex-cityx]  # Create an openGrid containing the distances of each point to the city's centre
-    region = xs**2 + ys**2 <= (initialfactor*r)**2
-    memoryField[:, region] = 1.0
-
-    return memoryField
+if __name__ == "__main__":
+    args = sys.argv
+    country = args[1]
+    alpha = float(args[2])
+    sigma_smooth = int(args[3])
+    factor = int(args[4])
+    if factor == 1:
+        factor = np.log(2)/10
+    elif factor == 2:
+        factor = np.log(100)/10
 
 
-
-args = sys.argv
-country = args[1]
-alpha = float(args[2])
-sigma_smooth = int(args[3])
-factor = int(args[4])
-if factor == 1:
-    factor = np.log(2)/10
-elif factor == 2:
-    factor = np.log(100)/10
-
-
-if country == "cornwall":
     includedRegionImg = Image.open("Cornwall_data/cornwall_mask.tif")
-    
+
     includedRegionArray = np.array(includedRegionImg, dtype = bool)
     includedRegion = np.zeros((includedRegionArray.shape[0] + 2, includedRegionArray.shape[1] + 2), dtype = bool)
     includedRegion[1:-1,1:-1] = includedRegionArray
     includedRegion = np.flip(includedRegion, axis = 0)
     mapsizex, mapsizey = includedRegion.shape
-    
-    #populationDensity = np.load("Cornwall_data/cornwall_gaussian_pop_dist.npy")
+
     populationDensity = np.load(f"Cornwall_data/smoothed_PopDistnew{sigma_smooth}_2.npy")
-    #populationDensity.fill(1)
-    
-    #populationDensity = np.ones((mapsizex, mapsizey))
-    #print(includedRegion.shape)
-    #populationDensity[~includedRegion] = 0
 
     print("mask loaded")
 
     beta = 1.1
-    sigma_coeff = 25 #50.0
-
-    sigma = sigma_coeff*(1-np.exp(-factor*populationDensity))#
-    
-    # mapsizex = 100
-    # mapsizey = 200
+    sigma_coeff = 25
+    sigma = sigma_coeff*(1-np.exp(-factor*populationDensity))
     tmax = 500.0
     delta_t = 0.0004
     delta_x = 1.0
     offset = 0
     initialfactor = 0.5
-    
     iterations = int(tmax/delta_t)
+    saveInterval = 2000
 
-    # populationDensity_shown = populationDensity.copy()
-    # populationDensity_shown[excludedRegion] = np.nan
-    # np.save("data/Dec/popDistUniform400x400.npy", populationDensity)
-
-    m = np.zeros((mapsizex, mapsizey))
-    # m[0,:,:] = np.random.uniform(0, 1, (mapsize, mapsize))
-    # m = initialCondition(m, city1)
+    # Initial condition
     initialRegion = np.load("/ddn/home/tffd79/Cornwall_data/cornwall_river_mask.npy").astype(bool)
+    m = np.zeros((mapsizex, mapsizey))
     m[:,:int(mapsizex/2)] = 1.0
     m[~includedRegion] = np.nan
     m[initialRegion] = 1.0
-    
-    #m = np.load("/ddn/data/tffd79/cornwallPopTestICcountyAlpha1.6Beta1.1Sigma50.0Deltat0.0001Tmax500.0_1/cornwallPopTestICcountyAlpha1.6Beta1.1Sigma50.0Deltat0.0001Tmax500.0MEMORY_1_474000.npy")
 
     f = np.zeros((mapsizex, mapsizey))
     f = sigmoid(m, alpha, beta)
-    
+
     print("m and f initialised")
-    
+
     folder_num = 0
     while True:
         print(folder_num)
@@ -208,14 +124,5 @@ if country == "cornwall":
             folder_num+=1
 
     print("folder created")
-
-    saveInterval = 2000
-    max = np.nanmax(populationDensity)
-    print("max ", max)
-    med = np.nanmedian(populationDensity)
-    print("med: ", med)
-
-    #sigma = 40 + 10*np.tanh((populationDensity-med)/(5*med))
+    
     m = calculate(m)
-    # m[~includedRegion] = np.nan
-    #sigma = "var"
