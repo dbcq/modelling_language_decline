@@ -48,7 +48,7 @@ def calculate(m):
 
     for k in range(0, iterations-1, 1):
         if k % saveInterval == 0:
-            filename = f"walesICbook{sigma_smooth}Alpha{alpha}Beta{beta}SigmavarFactor{factor}Deltat{delta_t}Tmax{tmax}MEMORY_{folder_num}_{k}.npy"
+            filename = f"walesICbook{sigma_smooth}Alpha{alpha}Beta{beta}SigmavarFactor2Deltat{delta_t}Tmax{tmax}MEMORY_{folder_num}_{k}.npy"
 
             np.save(os.path.join(folder_name, filename), m)
 
@@ -64,7 +64,6 @@ def calculate(m):
 
 if __name__ == "__main__":
 
-    #includedRegionImg = Image.open("Cornwall_data/cornwall_mask.tif")
     includedRegion = np.load("wales_mask.npy").astype(bool)
     
     mapsizex, mapsizey = includedRegion.shape
@@ -79,7 +78,7 @@ if __name__ == "__main__":
     beta = 1.1
     sigma_coeff = 25
     sigma_smooth = 10
-    factor=2
+    factor = np.log(100)/10
     sigma = sigma_coeff*(1-np.exp(-factor*populationDensity))#
     tmax = 0.002
     delta_t = 0.0004
@@ -111,7 +110,7 @@ if __name__ == "__main__":
     while True:
         print(folder_num)
         try:
-            folder_name = f"walesICbook{sigma_smooth}Alpha{alpha}Beta{beta}SigmavarFactor{factor}Deltat{delta_t}Tmax{tmax}_{folder_num}"           
+            folder_name = f"walesICbook{sigma_smooth}Alpha{alpha}Beta{beta}SigmavarFactor2Deltat{delta_t}Tmax{tmax}_{folder_num}"           
             os.mkdir(folder_name)
             break
         except OSError:
@@ -119,12 +118,8 @@ if __name__ == "__main__":
     
     print("folder created")
     
-    print("SIGMA:", sigma)
-    
     m = calculate(m)
     
-    plt.imshow(m, cmap=plt.jet())
-    plt.show()
 
 
 

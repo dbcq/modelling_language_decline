@@ -2,9 +2,7 @@
 the decline of the language using the equation described in the article."""
 
 import numpy as np
-from matplotlib import pyplot as plt
-from matplotlib import animation
-from PIL import Image, ImageDraw
+from PIL import Image
 import os
 from numba import jit
 import sys
@@ -51,8 +49,7 @@ def calculate(m):
 
     for k in range(0, iterations-1, 1):
         if k % saveInterval == 0:
-            filename = f"cornwallPopGaussian{sigma_smooth}ICriverAlpha{alpha}Beta{beta}SigmavarFactor{args[4]}Deltat{delta_t}Tmax{tmax}MEMORY_{folder_num}_{k+offset}.npy"
-            #cornwallPopGaussian{sigma_smooth}ICriverAlpha{alpha}Beta{beta}Sigma{sigma}Deltat{delta_t}Tmax{tmax}_{folder_num}
+            filename = f"cornwallPopGaussian{sigma_smooth}ICriverAlpha{alpha}Beta{beta}SigmavarFactor2Deltat{delta_t}Tmax{tmax}MEMORY_{folder_num}_{k+offset}.npy"
             np.save(os.path.join(folder_name, filename), m)
 
         print(k+1, " out of ", iterations, end = "\r")
@@ -66,29 +63,12 @@ def calculate(m):
 
 
 if __name__ == "__main__":
-    args = sys.argv
-    country = args[1]
-    alpha = float(args[2])
-    sigma_smooth = int(args[3])
-    factor = int(args[4])
-    if factor == 1:
-        factor = np.log(2)/10
-    elif factor == 2:
-        factor = np.log(100)/10
 
+    populationDensity = np.load(f"cornwall_smoothed_dist_ss10.npy")
 
-    includedRegionImg = Image.open("Cornwall_data/cornwall_mask.tif")
-
-    includedRegionArray = np.array(includedRegionImg, dtype = bool)
-    includedRegion = np.zeros((includedRegionArray.shape[0] + 2, includedRegionArray.shape[1] + 2), dtype = bool)
-    includedRegion[1:-1,1:-1] = includedRegionArray
-    includedRegion = np.flip(includedRegion, axis = 0)
-    mapsizex, mapsizey = includedRegion.shape
-
-    populationDensity = np.load(f"Cornwall_data/smoothed_PopDistnew{sigma_smooth}_2.npy")
-
-    print("mask loaded")
-
+    alpha = 1.1
+    sigma_smooth = 10
+    factor = np.log(100)/10
     beta = 1.1
     sigma_coeff = 25
     sigma = sigma_coeff*(1-np.exp(-factor*populationDensity))
@@ -100,8 +80,19 @@ if __name__ == "__main__":
     iterations = int(tmax/delta_t)
     saveInterval = 2000
 
+    # Load pop dist and included region
+    includedRegionImg = Image.open("cornwall_mask.tif")
+    includedRegionArray = np.array(includedRegionImg, dtype = bool)
+    includedRegion = np.zeros((includedRegionArray.shape[0] + 2, includedRegionArray.shape[1] + 2), dtype = bool)
+    includedRegion[1:-1,1:-1] = includedRegionArray
+    includedRegion = np.flip(includedRegion, axis = 0)
+    mapsizex, mapsizey = includedRegion.shape
+
+    print("mask loaded")
+
+
     # Initial condition
-    initialRegion = np.load("/ddn/home/tffd79/Cornwall_data/cornwall_river_mask.npy").astype(bool)
+    initialRegion = np.load("cornwall_river_mask.npy").astype(bool)
     m = np.zeros((mapsizex, mapsizey))
     m[:,:int(mapsizex/2)] = 1.0
     m[~includedRegion] = np.nan
@@ -114,10 +105,8 @@ if __name__ == "__main__":
 
     folder_num = 0
     while True:
-        print(folder_num)
         try:
-            folder_name = f"/ddn/data/tffd79/cornwallGaussianPopDist/cornwallPopGaussian{sigma_smooth}ICriverAlpha{alpha}Beta{beta}SigmavarFactor{args[4]}Deltat{delta_t}Tmax{tmax}_{folder_num}"
-            #folder_name = f"data/Jan/Cornwall/cornwallTestAlpha{alpha}Beta{beta}Sigma{sigma}Deltat{delta_t}Tmax{tmax}_{folder_num}"
+            folder_name = f"cornwallPopGaussian{sigma_smooth}ICriverAlpha{alpha}Beta{beta}SigmavarFactor2Deltat{delta_t}Tmax{tmax}_{folder_num}"
             os.mkdir(folder_name)
             break
         except OSError:
