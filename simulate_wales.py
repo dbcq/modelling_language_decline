@@ -30,7 +30,6 @@ def localAverageCountry(field):
                     if includedRegion[i + dx][j + dy]:
                         # if (0 <= i + dx <= x - 1) and (0 <= j + dy <= y - 1):
                         sum += field[i + dx][j + dy]
-                        # print(field[i + dx][j + dy])
                         counter += 1
                     else:
                         pass
@@ -49,17 +48,14 @@ def calculate(m):
 
     for k in range(0, iterations-1, 1):
         if k % saveInterval == 0:
-            #filename = f"walesICbook{sigma_smooth}Alpha{alpha}Beta{beta}SigmavarFactor{args[4]}Deltat{delta_t}Tmax{tmax}MEMORY_{folder_num}_{k}.npy"
-            #filename = f"walesICbook{sigma_smooth}Alpha{alpha}Beta{beta}Sigma{sigma}Deltat{delta_t}Tmax{tmax}MEMORY_{folder_num}_{k}.npy"
-            filename = f"walesICbookNoPopAlpha{alpha}Beta{beta}Sigma{sigma}Deltat{delta_t}Tmax{tmax}MEMORY_{folder_num}_{k}.npy"
+            filename = f"walesICbook{sigma_smooth}Alpha{alpha}Beta{beta}SigmavarFactor{factor}Deltat{delta_t}Tmax{tmax}MEMORY_{folder_num}_{k}.npy"
 
             np.save(os.path.join(folder_name, filename), m)
 
         print(k+1, " out of ", iterations, end = "\r")
         avgDensFreq = localAverageCountry(populationDensity*f[:,:])
         dmdt = np.zeros((mapsizex, mapsizey))
-        #dmdt[includedRegion] = (f[includedRegion] - m[includedRegion]) + (2*sigma[includedRegion]**2) * (avgDensFreq[includedRegion]/avgDensity[includedRegion] - f[includedRegion])
-        dmdt[includedRegion] = (f[includedRegion] - m[includedRegion]) + (2*sigma**2) * (avgDensFreq[includedRegion]/avgDensity[includedRegion] - f[includedRegion])
+        dmdt[includedRegion] = (f[includedRegion] - m[includedRegion]) + (2*sigma[includedRegion]**2) * (avgDensFreq[includedRegion]/avgDensity[includedRegion] - f[includedRegion])
 
         m[includedRegion] = m[includedRegion] + dmdt[includedRegion]*delta_t
         f[includedRegion] = sigmoid(m[includedRegion], alpha, beta)
@@ -67,72 +63,55 @@ def calculate(m):
     return m
 
 if __name__ == "__main__":
-    args = sys.argv
-    country = args[1]
-    alpha = float(args[2])
-    sigma_smooth = int(args[3])
-    
+
     #includedRegionImg = Image.open("Cornwall_data/cornwall_mask.tif")
-    includedRegion = np.load("Wales_data/wales_plus_mask.npy").astype(bool)
-    
-    #includedRegionArray = np.array(includedRegionImg, dtype = bool)
-    #includedRegion = np.zeros((includedRegionArray.shape[0] + 2, includedRegionArray.shape[1] + 2), dtype = bool)
-    #includedRegion[1:-1,1:-1] = includedRegionArray
-    #includedRegion = np.flip(includedRegion, axis = 0)
+    includedRegion = np.load("wales_mask.npy").astype(bool)
     
     mapsizex, mapsizey = includedRegion.shape
     
-    #populationDensity = np.load(f"Wales_data/smoothed_PopDistnew{sigma_smooth}_2.npy")
-    
-    populationDensity = np.ones((mapsizex, mapsizey))
-    #print(includedRegion.shape)
-    #populationDensity[~includedRegion] = 0
+    populationDensity = np.load(f"wales_smoothed_dist_ss10.npy")
+    populationDensity[~includedRegion] = 0
     
     print("mask loaded")
     
+    # Simulation params
+    alpha = 1.1
     beta = 1.1
-    sigma_coeff = 25 #50.0
-
-    #sigma = sigma_coeff*(1-np.exp(-factor*populationDensity))#
-    sigma = 25
-    # mapsizex = 100
-    # mapsizey = 200
-    tmax = 500.0
+    sigma_coeff = 25
+    sigma_smooth = 10
+    factor=2
+    sigma = sigma_coeff*(1-np.exp(-factor*populationDensity))#
+    tmax = 0.002
     delta_t = 0.0004
     delta_x = 1.0
-    
     initialfactor = 0.5
+
+
+    # File params
+    plot = True
+    saveInterval = 500
+    reduce_size = 1    # Reduce size of m produced by taking only every (n>1)th frame
     
     iterations = int(tmax/delta_t)
     
-    # populationDensity_shown = populationDensity.copy()
-    # populationDensity_shown[excludedRegion] = np.nan
-    # np.save("data/Dec/popDistUniform400x400.npy", populationDensity)
-    
+    # Initialise memory and frequency fields
     m = np.zeros((mapsizex, mapsizey))
-    # m[0,:,:] = np.random.uniform(0, 1, (mapsiyze, mapsize))
-    # m = initialCondition(m, city1)
-    initialRegion = np.load("/ddn/home/tffd79/Wales_data/wales_initial_1850.npy").astype(bool)
+    initialRegion = np.load("wales_initial_1850.npy").astype(bool)
     m[180:,:350] = includedRegion[180:, :350]
     m[initialRegion] = 1.0
     m[~includedRegion] = np.nan
-    
     
     f = np.zeros((mapsizex, mapsizey))
     f = sigmoid(m, alpha, beta)
     
     print("m and f initialised")
     
+    # Create folder for data (iterating folder number if already exists)
     folder_num = 0
     while True:
         print(folder_num)
         try:
-            #folder_name = f"/ddn/data/tffd79/walesGaussianPopDist/walesICbook{sigma_smooth}Alpha{alpha}Beta{beta}SigmavarFactor{args[4]}Deltat{delta_t}Tmax{tmax}_{folder_num}"
-            folder_name = f"/ddn/data/tffd79/walesGaussianPopDist/walesICbook{sigma_smooth}Alpha{alpha}Beta{beta}Sigma{sigma}Deltat{delta_t}Tmax{tmax}_{folder_num}"
-            folder_name = f"/ddn/data/tffd79/walesGaussianPopDist/walesICbookNoPopAlpha{alpha}Beta{beta}Sigma{sigma}Deltat{delta_t}Tmax{tmax}_{folder_num}"
-
-            
-            #folder_name = f"data/Jan/Cornwall/cornwallTestAlpha{alpha}Beta{beta}Sigma{sigma}Deltat{delta_t}Tmax{tmax}_{folder_num}"
+            folder_name = f"walesICbook{sigma_smooth}Alpha{alpha}Beta{beta}SigmavarFactor{factor}Deltat{delta_t}Tmax{tmax}_{folder_num}"           
             os.mkdir(folder_name)
             break
         except OSError:
@@ -140,41 +119,12 @@ if __name__ == "__main__":
     
     print("folder created")
     
-    saveInterval = 500
+    print("SIGMA:", sigma)
     
     m = calculate(m)
-    # m[~includedRegion] = np.nan
     
-    
-    # m = m[::10,:,:] # Reduce size by factor of 10
-    # print("hello")
-    # plot = False
-    # np.save(f"data/Jan/Country/cornwallTestAlpha{alpha}Beta{beta}Sigma{sigma}Deltat{delta_t}Tmax{tmax}MEMORY_every10th.npy", m)
-    #np.save(f"/ddn/data/tffd79/startingagainMapsize400Alpha{alpha}Beta{beta}Sigma{sigma}Deltat{delta_t}Tmax{tmax}MEMORY.npy", m)
-    
-    if plot == True:
-        def next(k):
-            plotheatmap(m[k, :, :], k)
-    
-    
-        def plotheatmap(m, k):
-            ax2.clear()
-            ax2.imshow(m, origin="lower", alpha = 0.5)
-            plt.title(f"t = {10*k}")
-    
-    
-        fig, ax1 = plt.subplots(1, 1)  # , sharex=True)
-        ax2 = fig.add_subplot(111, facecolor="none")
-        ax1.set_aspect('equal')
-        ax2.set_aspect('equal')
-        ax1.axis("off")
-        ax2.axis("off")
-        ax1.imshow(populationDensity, origin = "lower")
-    
-        # m = np.load(f"data/Jan/UKtest/UKtest4Alpha1.0Beta1.2Sigma4.0Deltat0.01Tmax0.1MEMORY_0.npy")
-        # print(m.shape)
-        ani = animation.FuncAnimation(fig, next, frames = m.shape[0])
-        # ani.save("data/Jan/solvingPDEmetropolitanSciPywTEST3.gif")
+    plt.imshow(m, cmap=plt.jet())
+    plt.show()
 
 
 
