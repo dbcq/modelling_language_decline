@@ -89,8 +89,6 @@ for (x, y), el in np.ndenumerate(popDist):
     print(x, ", ", y, end = "\r")
 
 
-
-# np.save("countries/Cornwall_data/smoothed_gaussian.npy", smoothedPopDist)
 ax1.imshow(includedRegion, origin = "lower")
 im = ax2.imshow(popDist, origin = "lower")
 plt.colorbar(im)

@@ -14,10 +14,6 @@ matplotlib.rcParams.update({
 })
 
 
-# plt.rcParams["font.family"] = "serif"
-# plt.rcParams["font.serif"] = ["Times New Roman"] + plt.rcParams["font.serif"]
-# matplotlib.use("pgf")
-
 format = "png"
 colorbar = "colorbar"
 save = True
@@ -27,38 +23,28 @@ for ax in axs:
     ax.set_aspect('equal')
     ax.axis("off")
 isogloss = "isogloss"
-path = "data/Mar/cornwallPopGaussian10ICriverAlpha1.5Beta1.1SigmavarFactor1Deltat0.0004Tmax500.0_0_"
-ksa1 = [0, 100000, 1000000]
-kss25 = [2000, 20000, 60000]
-kss50 = [2000, 100000, 220000]
+path = "data"
+
+# ks10 = [2000, 100000, 220000]    # alpha = 1.0
+ks15 = [54000, 106000, 228000]    # alpha = 1.5
 filenames = []
-for k in kss50:
-    # nametemplate = f"cornwallPopGaussian10ICriverAlpha1.5Beta1.1Sigma50Deltat0.0001Tmax500.0MEMORY_0_{k}.npy"
+for k in ks15:
+    # nametemplate = f"cornwallPopGaussian10ICriverAlpha1.0Beta1.1SigmavarFactor1Deltat0.0004Tmax500.0MEMORY_0_{k}.npy"
     nametemplate = f"cornwallPopGaussian10ICriverAlpha1.5Beta1.1SigmavarFactor1Deltat0.0004Tmax500.0MEMORY_0_{k}.npy"
     filenames.append(nametemplate)
 
-# filenames = ["cornwallPopGaussian10ICriverAlpha1.5Beta1.1SigmavarDeltat0.0001Tmax500.0MEMORY_1_234000.npy"]*3
-includedRegion = np.load("countries/Cornwall_data/cornwall_mask_w_border_rightway.npy").astype(bool)
+includedRegion = np.load("cornwall_mask_w_border_rightway.npy").astype(bool)
 
-# Single
-# for i, k in enumerate(ks):
 for i, filename in enumerate(filenames):
-    # plt.cla()
     if i == 0:
         s = fig.get_size_inches()
         print(s)
-        # fig.set_size_inches(float(s[0])*0.85, float(s[1])*0.9)
         fig.set_size_inches(float(s[0])*0.9, float(s[1])*0.9)
-    # filename = f"mUniformforbigfigure{k}.npy"
     savename = f"mCornwalltest{i}.png"
     filepath = os.path.join(path, filename)
     savepath = os.path.join(path, savename)
     m = np.load(filepath)
     populationDensity = np.ones((m.shape[0], m.shape[1]))
-    populationDensity = np.load("Report/simpleExamplePopulationDensity.npy")
-    # im = axs[i].imshow(populationDensity, origin = "lower", vmin = 0, vmax = 21)
-    # vmin, vmax = im.get_clim()
-    # print(vmin, vmax)
     im = axs[i].imshow(m, origin='lower', cmap=plt.cm.jet, vmin = 0.0, vmax = 1.0)  # Here make an AxesImage rather than contour
 
     if isogloss == "isogloss":
@@ -74,12 +60,8 @@ for i, filename in enumerate(filenames):
     q = axs[i].get_position()
     print(q)
 
-    # ax2pos.x1 + 0.05, ax2pos.y0, .05, ax2pos.height
-    #
-
     if i == 2:
         div = make_axes_locatable(ax)
-        # cax = div.append_axes('right', '5%', '5%')
         cax = fig.add_axes([q.x1+0.02, q.y0, 0.015, q.height])
         cb = fig.colorbar(im, cax=cax, fraction=0.046, pad=0.04, ticks=[0.0, 0.5, 1.0])
         cb.set_label("Frequency", rotation=270, labelpad=15)
@@ -91,26 +73,9 @@ for i, filename in enumerate(filenames):
                                    frameon=False,
                                    size_vertical=1)
         axs[i].add_artist(scalebar)
-        # fontproperties=fontprops)
 
 
     fig.tight_layout()
 
-# plt.subplots_adjust(wspace=0.2)
-
-plt.savefig("paper/cornwall1.5.pdf", bbox_inches = "tight", dpi = 500)
+plt.savefig("cornwall1.5.pdf", bbox_inches = "tight", dpi = 500)
 plt.show()
-#
-# levels = np.linspace(0, 1, 11)
-#
-# cb = plt.colorbar(contourplot, ticks = [0.0, 0.5, 1.0])
-# cb.ax.tick_params(labelsize=26)
-
-
-
-# if format == "png":
-#     if save == True:
-#         print("saving...")
-#         plt.savefig("graphs/Interim/{}.png".format(filename), bbox_inches = "tight")
-#         plt.show()
-#     plt.show()
