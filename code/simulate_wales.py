@@ -55,7 +55,7 @@ def calculate(m):
         print(k+1, " out of ", iterations, end = "\r")
         avgDensFreq = localAverageCountry(populationDensity*f[:,:])
         dmdt = np.zeros((mapsizex, mapsizey))
-        dmdt[includedRegion] = (f[includedRegion] - m[includedRegion]) + (2*sigma[includedRegion]**2) * (avgDensFreq[includedRegion]/avgDensity[includedRegion] - f[includedRegion])
+        dmdt[includedRegion] = (f[includedRegion] - m[includedRegion]) + (2*    sigma[includedRegion]**2) * (avgDensFreq[includedRegion]/avgDensity[includedRegion] - f[includedRegion])
 
         m[includedRegion] = m[includedRegion] + dmdt[includedRegion]*delta_t
         f[includedRegion] = sigmoid(m[includedRegion], alpha, beta)
@@ -64,23 +64,23 @@ def calculate(m):
 
 if __name__ == "__main__":
 
-    includedRegion = np.load("wales_mask.npy").astype(bool)
+    includedRegion = np.load("code/wales_mask.npy").astype(bool)
     
     mapsizex, mapsizey = includedRegion.shape
     
-    populationDensity = np.load(f"wales_smoothed_dist_ss10.npy")
+    populationDensity = np.load(f"code/smoothed_PopDistnew5_2.npy")
     populationDensity[~includedRegion] = 0
     
     print("mask loaded")
     
     # Simulation params
-    alpha = 1.1
+    alpha = 2.5
     beta = 1.1
     sigma_coeff = 25
-    sigma_smooth = 10
-    factor = np.log(100)/10
+    sigma_smooth = 5
+    factor = np.log(2)/10
     sigma = sigma_coeff*(1-np.exp(-factor*populationDensity))#
-    tmax = 0.002
+    tmax = 500.0
     delta_t = 0.0004
     delta_x = 1.0
     initialfactor = 0.5
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     
     # Initialise memory and frequency fields
     m = np.zeros((mapsizex, mapsizey))
-    initialRegion = np.load("wales_initial_1850.npy").astype(bool)
+    initialRegion = np.load("code/wales_initial_1850.npy").astype(bool)
     m[180:,:350] = includedRegion[180:, :350]
     m[initialRegion] = 1.0
     m[~includedRegion] = np.nan
