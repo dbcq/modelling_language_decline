@@ -53,8 +53,8 @@ def gauss(y, x, squarex, squarey, popTot):
 
 
 # Get smoothed distribution
-includedRegion = np.load("wales_plus_mask.npy").astype(bool)
-popDist = np.load("wales_pop.npy")
+includedRegion = np.load("../data/wales_plus_mask.npy").astype(bool)
+popDist = np.load("../data/wales_pop.npy")
 
 sizex, sizey = popDist.shape
 x = np.arange(0, sizey, 1)
@@ -63,7 +63,7 @@ y = np.arange(0, sizex, 1)
 X, Y = np.meshgrid(x, y)
 
 smoothedPopDist = np.zeros_like(popDist)
-sigma_smooth = 10
+sigma_smooth = 5
 
 # Distribute population
 for (x, y), el in np.ndenumerate(popDist):
@@ -88,7 +88,7 @@ for (x, y), el in np.ndenumerate(popDist):
         smoothedPopDist += g
     print(x, ", ", y, end = "\r")
 
-
+np.save("wales_smoothed_dist_ss5.npy", smoothedPopDist)
 ax1.imshow(includedRegion, origin = "lower")
 im = ax2.imshow(popDist, origin = "lower")
 plt.colorbar(im)
