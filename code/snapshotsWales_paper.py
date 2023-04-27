@@ -4,8 +4,8 @@ from matplotlib import pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
 import matplotlib.font_manager as fm
-from mpl_toolkits.axes_grid.inset_locator import (inset_axes, InsetPosition,
-                                                  mark_inset)
+# from mpl_toolkits.axes_grid.inset_locator import (inset_axes, InsetPosition,
+                                                #   mark_inset)
 
 
 import matplotlib.pyplot as plt
@@ -34,19 +34,21 @@ for ax in axs:
     ax.set_aspect('equal')
     ax.axis("off")
 isogloss = "isogloss"
-path = "data"
+path = "../data"
 
 ksa10 = [2500, 54500, 81500]    # alpha = 1.0
-kssa17 = [8000, 28000, 55000]    # alpha = 1.7
+ksa17=[7500,28000,55000]    # alpha = 1.7
 filenames = []
-for k in kssa17:
-    # nametemplate = f"walesICbook5Alpha1.0Beta1.1SigmavarFactor1Deltat0.0004Tmax500.0MEMORY_1_{k}.npy"
-    nametemplate = f"walesICbook5Alpha1.7Beta1.1SigmavarFactor1Deltat0.0004Tmax500.0MEMORY_1_{k}.npy"
+
+# for k in ksa17:    
+for k in ksa10:
+    nametemplate = f"walesICbook5Alpha1.0Beta1.1SigmavarFactor1Deltat0.0004Tmax500.0MEMORY_1_{k}.npy"
+    # nametemplate = f"walesICbook5Alpha1.7Beta1.1SigmavarFactor1Deltat0.0004Tmax500.0MEMORY_1_{k}.npy"
     filenames.append(nametemplate)
 
-includedRegion = np.load("wales_mask.npy").astype(bool)[:586, 50:540]
-wales = np.load("wales_country_mask.npy")[:586, 50:540]
-populationDensity = np.load("wales_smoothed_dist_ss10.npy")
+includedRegion = np.load("../assets/wales_mask.npy").astype(bool)[:586, 50:540]
+wales = np.load("../assets/wales_country_mask.npy")[:586, 50:540]
+populationDensity = np.load("../assets/wales_smoothed_dist_ss10.npy")
 populationDensity = populationDensity[:586, 50:540]
 
 for i, filename in enumerate(filenames):
@@ -93,5 +95,7 @@ for i, filename in enumerate(filenames):
 
     fig.tight_layout()
     plt.subplots_adjust(wspace = 0.22)
-plt.savefig("wales1.7.pdf", bbox_inches = "tight")#, dpi = 500)
+
+# Uncomment to save
+# plt.savefig("wales1.7_changes.pdf", bbox_inches = "tight")#, dpi = 500)
 plt.show()
