@@ -55,7 +55,7 @@ def calculate(m):
         print(k+1, " out of ", iterations, end = "\r")
         avgDensFreq = localAverageCountry(populationDensity*f[:,:])
         dmdt = np.zeros((mapsizex, mapsizey))
-        dmdt[includedRegion] = (f[includedRegion] - m[includedRegion]) + (2*    sigma[includedRegion]**2) * (avgDensFreq[includedRegion]/avgDensity[includedRegion] - f[includedRegion])
+        dmdt[includedRegion] = (f[includedRegion] - m[includedRegion]) + (2*sigma[includedRegion]**2) * (avgDensFreq[includedRegion]/avgDensity[includedRegion] - f[includedRegion])
 
         m[includedRegion] = m[includedRegion] + dmdt[includedRegion]*delta_t
         f[includedRegion] = sigmoid(m[includedRegion], alpha, beta)
