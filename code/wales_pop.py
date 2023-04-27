@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 from scipy.integrate import odeint
 import os
 import matplotlib
-from mpl_toolkits.axes_grid.inset_locator import InsetPosition
+from mpl_toolkits.axes_grid1.inset_locator import InsetPosition
                                                   
 matplotlib.rcParams.update({
     "pgf.texsystem": "pdflatex",
@@ -13,34 +13,37 @@ matplotlib.rcParams.update({
 })                                                  
 
 
+# Define external variables
 years = np.linspace(1050,1800,16,True, dtype = int)
 
 realpopyears = [1901, 1911, 1921, 1931, 1951, 1961, 1971, 2001]
 realPop = [49.9, 43.5, 37.1, 36.8, 28.9, 26.0, 20.9, 20.5]
 popprop = np.array(realPop)/100
 
-walesMask = np.load("wales_fullsize_country_mask.npy").astype(bool)
-initialMask = np.load("wales_initial_1850.npy").astype(bool)
-walesPopulation = np.load(f"wales_smoothed_dist_ss10.npy")
+walesMask = np.load("../assets/wales_fullsize_country_mask.npy").astype(bool)
+initialMask = np.load("../assets/wales_initial_1850.npy").astype(bool)
+walesPopulation = np.load(f"../assets/wales_smoothed_PopDistnew5_2.npy")
 walesPopulation[~walesMask] = np.nan
 popTot = np.nansum(walesPopulation[walesMask])
 areaTot = np.nansum(walesMask.astype(int))
-print(popTot)
 
 initialProp = np.nansum(walesPopulation[initialMask])/np.nansum(walesPopulation[walesMask])
 print("initial:", initialProp)
 
 # alphas = [1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3]
 alphas = [1.2, 1.7, 2.3]
+# alphas=[1.3, 1.7]
 sigma = 25
 endyear = 4087
+# endyear = 2655
 
 fig, axs = plt.subplots(1, 1, figsize = (3.3, 3.1))#, gridspec_kw={'height_ratios': [3, 1]})
 ax2 = plt.axes([0,0,1,1])
 for number, alpha in enumerate(alphas):
+    # name_template = f"walesICbook5Alpha{alpha}Beta1.1SigmavarFactor1Deltat0.0004Tmax500.0"
     name_template = f"walesICbook5Alpha{alpha}Beta1.1SigmavarFactor1Deltat0.0004Tmax500.0"
     num = 1
-    path = "data"
+    path = "../data"
     timespath = os.path.join(path, f"times_Gaussian_{name_template}_{num}.npy")
     times = np.load(timespath)
 
@@ -50,35 +53,12 @@ for number, alpha in enumerate(alphas):
     prop = pops/popTot
     propinitial = prop[0]
     lastIndex = np.argwhere(prop < 0.002)[0]
-    if alpha == 1.7:
-        print(lastIndex)
+    
     prop = prop[0:lastIndex[0]+1]
     years = np.linspace(1850, endyear, lastIndex[0] + 1)
-
-
-    chisq = 0
-    for i, year in enumerate(realpopyears):
-        index = (np.abs(years - year)).argmin()
-        closestYear = years[index]
-        Ei = prop[index]
-        print("Oi :", Ei)
-        Oi = popprop[i]
-        print("Ei:", Oi)
-        chisqContrib = ((Oi - Ei) ** 2) / Ei
-        chisq += chisqContrib
-
-    MSE = 0
-    N = popprop.shape[0]
-    for i, year in enumerate(realpopyears):
-        index = (np.abs(years - year)).argmin()
-        Ei = prop[index]
-        Oi = popprop[i]
-        MSEcontrib = (Oi - Ei) ** 2
-        MSE += MSEcontrib
-    MSE = MSE / N
-
-    a = axs.plot(years, prop)#, label = MSE)
-    a = ax2.plot(years, prop)#, label = MSE)
+    
+    a = axs.plot(years, prop)
+    a = ax2.plot(years, prop)
 
 
 def dxdt(x, t, a, c, s):
@@ -91,27 +71,7 @@ def getFunction(x, x0, a, c, s):
 
 params = [0.4963, 1.0073, -3.5302, 0.5035]
 f = getFunction(realpopyears, *params)
-chisq = 0
-ODEresids = []
-for i, year in enumerate(realpopyears):
-    Ei = f[i]
-    print("Oi :", Ei)
-    Oi = popprop[i]
-    print("Ei:", Oi)
-    chisqContrib = ((Oi - Ei) ** 2) / Ei
-    chisq += chisqContrib
 
-MSE = 0
-
-for i, year in enumerate(realpopyears):
-    Ei = f[i]
-    print("Oi :", Ei)
-    Oi = popprop[i]
-    print("Ei:", Oi)
-    MSEcontrib = (Oi - Ei) ** 2
-
-    MSE += MSEcontrib
-MSE = MSE/N
 ax2.plot(realpopyears, f, color="dimgrey", linestyle="--",linewidth = 2)#,label = fr"$\chi^2 = {MSE}")
 axs.plot(realpopyears, f, color="dimgrey", linestyle="--", linewidth = 2)#,label = fr"$\chi^2 = {MSE}")
 axs.plot(realpopyears, popprop, marker = ".", color = "r",linestyle = "")#, label = "Historical data")
@@ -155,8 +115,8 @@ ax2.add_collection(lc)
 line1 = Line2D([0], [0], color = 'red', marker='.', linestyle='')
 line2 = Line2D([0], [0], color = 'dimgrey', linestyle='--')
 
-l = ax2.legend(handles=[lc, line1], labels =[fr"$\alpha = 1.3, 1.7, 2.3$", "Historical"], handler_map = {lc: HandlerColorLineCollection(numpoints=3)}, framealpha=0, markerfirst=False)
-l = ax2.legend(handles=[lc,line1, line2], labels=[fr"$\alpha = 1.3, 1.7, 2.3$","Historical", "ODE"], handler_map={lc: HandlerColorLineCollection(numpoints=3)}, loc="upper right", framealpha=0, markerfirst=False)
+l = ax2.legend(handles=[lc, line1], labels =[fr"$\alpha = 1.2, 1.7, 2.3$", "Historical"], handler_map = {lc: HandlerColorLineCollection(numpoints=3)}, framealpha=0, markerfirst=False)
+l = ax2.legend(handles=[lc,line1, line2], labels=[fr"$\alpha = 1.2, 1.7, 2.3$","Historical", "ODE"], handler_map={lc: HandlerColorLineCollection(numpoints=3)}, loc="upper right", framealpha=0, markerfirst=False)
 
 
 # Create inset
@@ -179,5 +139,5 @@ axs.xaxis.offsetText.set_fontsize(size)
 axs.spines['top'].set_visible(False)
 axs.spines['right'].set_visible(False)
 
-plt.savefig("wales_pop.pdf", bbox_inches = "tight")
+# plt.savefig("wales_pop_changes_2655.pdf", bbox_inches = "tight")
 plt.show()

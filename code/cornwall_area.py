@@ -43,10 +43,8 @@ if sigma == 25:
     dt = 0.0004
 elif sigma == 50:
     dt = 0.0001
-chisqlist = []
 resid17 = []
 
-# Calculate MSE
 fig, axs = plt.subplots(1, 1, figsize = (2.4, 2.9))
 for number, alpha in enumerate(alphas):
     name_template = f"cornwallPopGaussian{sigma_smooth}ICriverAlpha{alpha}Beta1.1SigmavarFactor{factor}Deltat{dt}Tmax500.0"
@@ -64,14 +62,11 @@ for number, alpha in enumerate(alphas):
     years = np.linspace(1200, 1800, lastIndex[0]+1-np.argmax(areas))
     times = times[np.argmax(areas):lastIndex[0]+1]
 
-    chisq = 0
     for i, year in enumerate(realareayears):
         index = (np.abs(years - year)).argmin()
         closestYear = years[index]
         Ei = prop[index]
         Oi = areaprop[i]
-        chisqContrib = ((Oi - Ei) ** 2) / Ei
-        chisq += chisqContrib
 
     a = axs.plot(years, prop)
 

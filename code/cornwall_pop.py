@@ -49,7 +49,6 @@ elif sigma == 50:
 chisqlist = []
 resid17 = []
 
-# Minimise MSE
 fig, (axs, ax2) = plt.subplots(2, 1, figsize = (2.4, 2.9), gridspec_kw={'height_ratios': [3, 1]})
 for number, alpha in enumerate(alphas):
     name_template = f"cornwallPopGaussian{sigma_smooth}ICriverAlpha{alpha}Beta1.1SigmavarFactor{factor}Deltat{dt}Tmax500.0"
@@ -68,19 +67,14 @@ for number, alpha in enumerate(alphas):
     prop = prop[0:lastIndex[0]+1]
     years = np.linspace(1200, 1800, lastIndex[0] + 1)
 
-    chisq = 0
     for i, year in enumerate(realpopyears):
         index = (np.abs(years - year)).argmin()
-        closestYear = years[index]
         Ei = prop[index]
         Oi = popprop[i]
-        chisqContrib = ((Oi - Ei) ** 2) / Ei
-        chisq += chisqContrib
-        if number == 1:
+        if number == 1:    # i.e. if alpha=1.7
             resid17.append(Ei-Oi)
-    chisqlist.append(chisq)
 
-    a = axs.plot(years, prop)#, label = fr"$\alpha = {alpha}$")
+    a = axs.plot(years, prop)
     colour = a[-1].get_color()
 
 
@@ -102,14 +96,12 @@ def getFunction(x, x0, a, c, s):
 params0 = [2,0.0000000000001,0.4]
 params = [0.81135037, 1.00080347, 7.58154597, 0.49949072]
 f = getFunction(realpopyears, *params)
-chisq = 0
 ODEresids = []
 for i, year in enumerate(realpopyears):
     Ei = f[i]
     Oi = popprop[i]
-    chisqContrib = ((Oi - Ei) ** 2) / Ei
     ODEresids.append(Ei-Oi)
-    chisq += chisqContrib
+    
 ode = axs.plot(realpopyears, f, color = 'dimgrey', linestyle = "--", linewidth = 2)#,label = "ODE")
 
 size = 11
