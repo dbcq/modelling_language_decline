@@ -4,7 +4,6 @@ from scipy.optimize import curve_fit
 from scipy.integrate import solve_ivp
 from scipy.integrate import odeint
 import os
-from matplotlib import rcParams
 import matplotlib
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
@@ -15,6 +14,7 @@ matplotlib.rcParams.update({
     'pgf.rcfonts': False,
 })
 
+# Define external variables
 years = np.linspace(1050,1800,16,True, dtype = int)
 realareayears = np.array([1200, 1300, 1400, 1450, 1500, 1600, 1650, 1700, 1750, 1800])
 realpopyears = np.array([1200, 1250, 1300, 1350, 1400, 1450, 1500, 1550, 1600, 1650, 1700, 1800])
@@ -25,11 +25,11 @@ totalPops = np.array([35, 43,52,48,55,62,69,76,84,93,106,192])*1000
 cornishSpeakers = np.array([30,34,38,32,34,33,33,30,22,14,5, 0])*1000
 popprop = (cornishSpeakers/totalPops)
 
-
+# Load assets
 sigma_smooth = 10
-cornwallMask = np.load("cornwall_county_mask.npy").astype(bool)
-initialMask = np.load("cornwall_river_mask.npy").astype(bool)
-countyPopulation = np.load(f"cornwall_smoothed_dist_ss10.npy")
+cornwallMask = np.load("../assets/cornwall_county_mask.npy").astype(bool)
+initialMask = np.load("../assets/cornwall_river_mask.npy").astype(bool)
+countyPopulation = np.load(f"../assets/cornwall_smoothed_dist_ss10.npy")
 countyPopulation[~cornwallMask] = np.nan
 popTot = np.nansum(countyPopulation[cornwallMask])
 areaTot = np.nansum(cornwallMask.astype(int))
@@ -38,6 +38,7 @@ print(popTot)
 initialProp = np.nansum(countyPopulation[initialMask])/np.nansum(countyPopulation[cornwallMask])
 print("initial:", initialProp)
 
+# Define hyperparams
 alphas = [1.3, 1.7, 2.3]
 factor = 1
 sigma = 25
@@ -48,11 +49,12 @@ elif sigma == 50:
 chisqlist = []
 resid17 = []
 
+# Minimise MSE
 fig, (axs, ax2) = plt.subplots(2, 1, figsize = (2.4, 2.9), gridspec_kw={'height_ratios': [3, 1]})
 for number, alpha in enumerate(alphas):
     name_template = f"cornwallPopGaussian{sigma_smooth}ICriverAlpha{alpha}Beta1.1SigmavarFactor{factor}Deltat{dt}Tmax500.0"
     num = 0
-    path = "data"
+    path = "../data"
     timespath = os.path.join(path, f"times_Gaussian_{name_template}_{num}.npy")
     times = np.load(timespath)
 
@@ -63,8 +65,6 @@ for number, alpha in enumerate(alphas):
     propinitial = prop[0]
     prop = prop*popprop[0]/propinitial
     lastIndex = np.argwhere(prop < 0.002)[0]
-    if alpha == 1.5:
-        print(lastIndex, ' last index')
     prop = prop[0:lastIndex[0]+1]
     years = np.linspace(1200, 1800, lastIndex[0] + 1)
 
@@ -73,12 +73,10 @@ for number, alpha in enumerate(alphas):
         index = (np.abs(years - year)).argmin()
         closestYear = years[index]
         Ei = prop[index]
-        # print("Oi :", Ei)
         Oi = popprop[i]
-        # print("Ei:", Oi)
         chisqContrib = ((Oi - Ei) ** 2) / Ei
         chisq += chisqContrib
-        if number == 1: #1:  4
+        if number == 1:
             resid17.append(Ei-Oi)
     chisqlist.append(chisq)
 
@@ -93,8 +91,8 @@ axs.spines['top'].set_visible(False)
 axs.spines['right'].set_visible(False)
 axs.set_ylim(top = 1.0)
 
+# Define and solve 'ODE model'
 def dxdt(x, t, a, c, s):
-    # print(a, c, s, end="\r")
     return (1-x)*c*(x**a)*s - c*x*(1-s)*(1-x)**a
 
 def getFunction(x, x0, a, c, s):
@@ -131,8 +129,10 @@ ax2.set_ylabel("Residuals", fontsize = size)
 matplotlib.rcParams['axes.unicode_minus'] = False
 ax2.set_yticks([-0.05, 0.0, 0.05])
 plt.sca(axs)
-# axs.set_xlabel("Year", fontsize=size)
 
+###############################################################
+# Some hacked-together code to make the multi-coloured legend #
+###############################################################
 from matplotlib.legend_handler import HandlerLineCollection
 from matplotlib.collections import LineCollection
 from matplotlib.lines import Line2D
@@ -169,7 +169,8 @@ line2 = Line2D([0], [0], color = 'dimgrey', linestyle='--')
 l = axs.legend(handles=[lc, line1], labels =[fr"$\alpha = 1.3, 1.7, 2.3$", "Historical"], handler_map = {lc: HandlerColorLineCollection(numpoints=3)}, framealpha=0, markerfirst=False)
 l = axs.legend(handles=[lc,line1, line2], labels=[fr"$\alpha = 1.3, 1.7, 2.3$","Historical", "ODE"], handler_map={lc: HandlerColorLineCollection(numpoints=3)}, loc="upper right", framealpha=0, markerfirst=False)
 
-plt.savefig(f"cornwallpop2.pdf", bbox_inches = "tight")
+# Uncomment to save
+# plt.savefig(f"cornwallpop2.pdf", bbox_inches = "tight")
 
 plt.show()
 
