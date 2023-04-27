@@ -12,6 +12,7 @@ matplotlib.rcParams.update({
     'pgf.rcfonts': False,
 })
 
+# Define external data
 years = np.linspace(1050,1800,16,True, dtype = int)
 realareayears = np.array([1200, 1300, 1400, 1450, 1500, 1600, 1650, 1700, 1750, 1800])
 realpopyears = np.array([1200, 1250, 1300, 1350, 1400, 1450, 1500, 1550, 1600, 1650, 1700, 1800])
@@ -24,9 +25,9 @@ popprop = (cornishSpeakers/totalPops)
 
 
 sigma_smooth = 10
-cornwallMask = np.load("cornwall_county_mask.npy").astype(bool)
-initialMask = np.load("cornwall_river_mask.npy").astype(bool)
-countyPopulation = np.load(f"cornwall_smoothed_dist_ss10.npy")
+cornwallMask = np.load("../assets/cornwall_county_mask.npy").astype(bool)
+initialMask = np.load("../assets/cornwall_river_mask.npy").astype(bool)
+countyPopulation = np.load(f"../assets/cornwall_smoothed_dist_ss10.npy")
 countyPopulation[~cornwallMask] = np.nan
 popTot = np.nansum(countyPopulation[cornwallMask])
 areaTot = np.nansum(cornwallMask.astype(int))
@@ -34,6 +35,7 @@ areaTot = np.nansum(cornwallMask.astype(int))
 initialProp = np.nansum(countyPopulation[initialMask])/np.nansum(countyPopulation[cornwallMask])
 print("initial:", initialProp)
 
+# Define hyperparams
 alphas = [1.3, 1.7, 2.3]
 factor = 1
 sigma = 25
@@ -44,6 +46,7 @@ elif sigma == 50:
 chisqlist = []
 resid17 = []
 
+# Calculate MSE
 fig, axs = plt.subplots(1, 1, figsize = (2.4, 2.9))
 for number, alpha in enumerate(alphas):
     name_template = f"cornwallPopGaussian{sigma_smooth}ICriverAlpha{alpha}Beta1.1SigmavarFactor{factor}Deltat{dt}Tmax500.0"
@@ -67,9 +70,7 @@ for number, alpha in enumerate(alphas):
         index = (np.abs(years - year)).argmin()
         closestYear = years[index]
         Ei = prop[index]
-        print("Oi :", Ei)
         Oi = areaprop[i]
-        print("Ei:", Oi)
         chisqContrib = ((Oi - Ei) ** 2) / Ei
         chisq += chisqContrib
 
@@ -87,11 +88,9 @@ axs.plot(realareayears, areaprop, marker=".", color="r", linestyle="")  # , labe
 axs.set_ylabel("Area proportion", fontsize=size)
 axs.set_xlabel("Year")
 
-
-
-#############################################################
-# Some hacked-together code to make the multi-coloured legend
-#############################################################
+###############################################################
+# Some hacked-together code to make the multi-coloured legend #
+###############################################################
 
 from matplotlib.legend_handler import HandlerLineCollection
 from matplotlib.collections import LineCollection
@@ -128,6 +127,8 @@ line2 = Line2D([0], [0], color = 'dimgrey', linestyle='--')
 
 l = axs.legend(handles=[lc, line1], labels =[fr"$\alpha = 1.3, 1.7, 2.3$", "Historical"], handler_map = {lc: HandlerColorLineCollection(numpoints=3)}, framealpha=0, markerfirst=False)
 
-plt.savefig(f"cornwallarea2.pdf", bbox_inches = "tight")
+# Uncomment to save
+# plt.savefig(f"cornwallarea2.pdf", bbox_inches = "tight")
+
 plt.show()
 
