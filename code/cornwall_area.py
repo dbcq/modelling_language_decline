@@ -55,7 +55,6 @@ for number, alpha in enumerate(alphas):
     timespath = os.path.join(path, f"times_Gaussian_{name_template}_{num}.npy")
     times = np.load(timespath)
     
-
     areapath = os.path.join(path, f"area1_Gaussian_2_{name_template}_{num}.npy")
     areas = np.load(areapath)
     areas = np.squeeze(areas)
@@ -83,13 +82,13 @@ axs.spines['top'].set_visible(False)
 axs.spines['right'].set_visible(False)
 axs.set_ylim(top = 1.0)
 
-
 axs.plot(realareayears, areaprop, marker=".", color="r", linestyle="")  # , label = "Historical data")
 axs.set_ylabel("Area proportion", fontsize=size)
 axs.set_xlabel("Year")
 
 ###############################################################
 # Some hacked-together code to make the multi-coloured legend #
+# Adapted from https://stackoverflow.com/questions/49223702/adding-a-legend-to-a-matplotlib-plot-with-a-multicolored-line #
 ###############################################################
 
 from matplotlib.legend_handler import HandlerLineCollection
