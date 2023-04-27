@@ -64,11 +64,11 @@ def calculate(m):
 
 if __name__ == "__main__":
 
-    includedRegion = np.load("code/wales_mask.npy").astype(bool)
+    includedRegion = np.load("../assets/wales_mask.npy").astype(bool)
     
     mapsizex, mapsizey = includedRegion.shape
     
-    populationDensity = np.load(f"code/smoothed_PopDistnew5_2.npy")
+    populationDensity = np.load(f"../assets/wales_smoothed_PopDistnew5_2.npy")
     populationDensity[~includedRegion] = 0
     
     print("mask loaded")
