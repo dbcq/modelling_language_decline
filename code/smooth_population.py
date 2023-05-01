@@ -54,7 +54,7 @@ def gauss(y, x, squarex, squarey, popTot):
 
 # Get smoothed distribution
 includedRegion = np.load("../data/wales_mask.npy").astype(bool)
-popDist = np.load("../data/wales_pop.npy")
+popDist = np.load("../data/wales_pop_dist.npy")
 
 sizex, sizey = popDist.shape
 x = np.arange(0, sizey, 1)
