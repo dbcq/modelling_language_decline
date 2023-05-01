@@ -68,7 +68,7 @@ if __name__ == "__main__":
     
     mapsizex, mapsizey = includedRegion.shape
     
-    populationDensity = np.load(f"../assets/wales_smoothed_PopDistnew5_2.npy")
+    populationDensity = np.load(f"../assets/wales_smoothed_dist_ss5.npy")
     populationDensity[~includedRegion] = 0
     
     print("mask loaded")

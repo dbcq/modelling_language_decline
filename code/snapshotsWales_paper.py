@@ -48,8 +48,8 @@ for k in ksa10:
 
 includedRegion = np.load("../assets/wales_mask.npy").astype(bool)[:586, 50:540]
 wales = np.load("../assets/wales_country_mask.npy")[:586, 50:540]
-populationDensity = np.load("../assets/wales_smoothed_dist_ss10.npy")
-populationDensity = populationDensity[:586, 50:540]
+# populationDensity = np.load("../assets/wales_smoothed_dist_ss10.npy")
+# populationDensity = populationDensity[:586, 50:540]
 
 for i, filename in enumerate(filenames):
 

@@ -20,9 +20,9 @@ realpopyears = [1901, 1911, 1921, 1931, 1951, 1961, 1971, 2001]
 realPop = [49.9, 43.5, 37.1, 36.8, 28.9, 26.0, 20.9, 20.5]
 popprop = np.array(realPop)/100
 
-walesMask = np.load("../assets/wales_fullsize_country_mask.npy").astype(bool)
+walesMask = np.load("../assets/wales_country_mask.npy").astype(bool)
 initialMask = np.load("../assets/wales_initial_1850.npy").astype(bool)
-walesPopulation = np.load(f"../assets/wales_smoothed_PopDistnew5_2.npy")
+walesPopulation = np.load(f"../assets/wales_smoothed_dist_ss5.npy")
 walesPopulation[~walesMask] = np.nan
 popTot = np.nansum(walesPopulation[walesMask])
 areaTot = np.nansum(walesMask.astype(int))
