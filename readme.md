@@ -18,7 +18,7 @@ Contents:
     - Files named `{country}_pop_dist` contain the population for each Output Area in the map (as discussed below)
     - Files named `{country}_smoothed_dist_ss{x}.npy` are generated using `smooth_population.py` and contain the population distribution used when generating simulations.
 
--`/data`: Contains the computed times (`times....npy`), areas (`area1....npy`) and population (`pop1....npy`) data used in the report. Other raw data can be generated using `simulate_{country}.py`. The format for these is:
+- `/data`: Contains the computed times (`times....npy`), areas (`area1....npy`) and population (`pop1....npy`) data used in the report. Other raw data can be generated using `simulate_{country}.py`. The format for these is:
 `cornwallPopGaussian{sigma_smooth}ICriverAlpha{alpha}Beta{beta}SigmavarFactor1Deltat{delta_t}Tmax{tmax}_{folder_num}`. `ICriver` in the Cornwall files and `ICbook` in the Wales files refer to the use of the initial conditions as described in the Methods section, either being the river boundary or taken from Pryce (1978). The roles of the other parameters are best understood by reading the Theory section of the paper. `Sigmavar` refers to the use of a $\sigma$ dependent on the population density, and `Factor1` refers to the use of $log(2)/10$ as a scaling factor.
 
 The pipeline of the experiments is as follows:
